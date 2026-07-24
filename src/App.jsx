@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './AuthContext';
 import Landing from './pages/Landing';
 import CategoryPage from './pages/CategoryPage';
@@ -10,6 +10,9 @@ import ProductDetail from './pages/ProductDetail';
 import PaymentPage from './pages/PaymentPage';
 import ProdukUnggulan from './pages/ProdukUnggulan';
 import CheckoutPage from './pages/CheckoutPage';
+import Setup2FA from './pages/Setup2FA';
+import Verify2FA from './pages/Verify2FA';
+// ❌ TwoFactorGuard DIHAPUS — tidak perlu, Login.jsx sudah urus 2FA sendiri
 
 function App() {
   return (
@@ -21,13 +24,15 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/admin" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          
-          {/* ✅ Route Baru */}
+
           <Route path="/cart" element={<CartPage />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/unggulan" element={<ProdukUnggulan />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+
+          <Route path="/setup-2fa" element={<Setup2FA />} />
+          <Route path="/verify-2fa" element={<Verify2FA />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
@@ -36,7 +41,7 @@ function App() {
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
-  
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
@@ -47,11 +52,11 @@ function ProtectedRoute({ children }) {
       </div>
     );
   }
-  
+
   if (!user) {
     return <Navigate to="/login" replace />;
   }
-  
+
   return children;
 }
 
