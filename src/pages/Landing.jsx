@@ -189,8 +189,20 @@ export default function Landing() {
     navigate('/');
   };
 
-  // ✅✅✅ TAMBAH KE KERANJANG SEKALIGUS KURANGI STOK ✅✅✅
+  // ✅✅✅ TAMBAH KE KERANJANG — WAJIB LOGIN DULU ✅✅✅
   const handleAddToCart = async (product) => {
+    // 0. Kalau status login masih dicek, tunggu sebentar (jangan ambil keputusan dulu)
+    if (authLoading) return;
+
+    // 1. ✅ WAJIB LOGIN — kalau belum login, arahkan ke halaman Login
+    if (!user) {
+      setToastMessage('Silakan login terlebih dahulu untuk menambahkan ke keranjang.');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2500);
+      navigate('/login');
+      return;
+    }
+
     const latestProduct = products.find(p => p.id === product.id) || product;
     const currentStock = getStock(latestProduct);
 
@@ -202,7 +214,7 @@ export default function Landing() {
       return;
     }
 
-    // 1. Masukkan ke keranjang
+    // 2. Masukkan ke keranjang
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
     const existingItem = cart.find(item => item.id === product.id);
     if (existingItem) {
@@ -213,15 +225,15 @@ export default function Landing() {
     localStorage.setItem('cart', JSON.stringify(cart));
     setCartCount(cart.length);
 
-    // 2. Kurangi stok di database
+    // 3. Kurangi stok di database
     const newStock = currentStock - 1;
     const { error } = await supabase.from('products').update({ stock: newStock }).eq('id', product.id);
     if (error) console.error('❌ Gagal mengurangi stok di database:', error);
 
-    // 3. Update tampilan lokal
+    // 4. Update tampilan lokal
     setProducts(prev => prev.map(p => (p.id === product.id ? { ...p, stock: newStock } : p)));
 
-    // 4. Notifikasi
+    // 5. Notifikasi
     setToastMessage(`${product.name} ditambahkan! Sisa stok: ${newStock}`);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2500);
