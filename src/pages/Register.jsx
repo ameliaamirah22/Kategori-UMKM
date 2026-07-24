@@ -8,17 +8,37 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleRegister = async (e) => {
+      const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signUp({ email, password });
+
+    const { data, error } = await supabase.auth.signUp({ email, password });
+
+    // 1. Error nyata (misal password terlalu pendek, format email salah)
     if (error) {
       alert(error.message);
-    } else {
-      alert('Registrasi berhasil! Selamat datang di UMKM Banyuwangi.');
-      // ✅ Langsung ke Beranda setelah register
-      navigate('/');
+      setLoading(false);
+      return;
     }
+
+    // 2. ✅ DETEKSI SUKSES PALSU: email sudah pernah terdaftar sebelumnya
+    //    (Supabase tidak membuat user baru, tapi juga tidak kasih error)
+    if (data?.user?.identities && data.user.identities.length === 0) {
+      alert('Email ini sudah terdaftar sebelumnya. Silakan login, atau pakai email lain.');
+      navigate('/login');
+      setLoading(false);
+      return;
+    }
+
+    // 3. User BENAR-BENAR baru dibuat
+    if (data.session) {
+      // Akun langsung aktif (konfirmasi email mati) → ke halaman login
+      alert('Registrasi berhasil! Silakan login dengan akun kamu.');
+    } else {
+      // Konfirmasi email nyala → suruh cek email
+      alert('Registrasi berhasil! Cek email kamu untuk konfirmasi, lalu login.');
+    }
+    navigate('/login'); 
     setLoading(false);
   };
 
